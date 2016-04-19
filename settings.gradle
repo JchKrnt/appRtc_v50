@@ -1,1 +1,1 @@
-include ':app', ':lib', ':apprtcdemo_v50', ':v50_lib'
+include ':apprtcdemo_v50', ':v50_lib'
