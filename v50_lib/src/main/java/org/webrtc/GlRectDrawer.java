@@ -156,7 +156,7 @@ public class GlRectDrawer implements RendererCommon.GlDrawer {
       GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, yuvTextures[i]);
     }
     drawRectangle(x, y, width, height);
-    // Unbind the textures as a precaution..
+    // Unbind the textures as a precaution.
     for (int i = 0; i < 3; ++i) {
       GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + i);
       GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);

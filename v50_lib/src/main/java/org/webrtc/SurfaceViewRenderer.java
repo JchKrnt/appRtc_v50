@@ -457,7 +457,7 @@ public class SurfaceViewRenderer extends SurfaceView
       VideoRenderer.renderFrameDone(frame);
       return;
     }
-    // After a surface size change, the EGLSurface might still have a buffer of the old size in the
+    // After a surface size change, tdace might still have a buffer of the old size in the
     // pipeline. Querying the EGLSurface will show if the underlying buffer dimensions haven't yet
     // changed. Such a buffer will be rendered incorrectly, so flush it with a black frame.
     synchronized (layoutLock) {
@@ -486,7 +486,7 @@ public class SurfaceViewRenderer extends SurfaceView
         for (int i = 0; i < 3; i++)  {
           yuvTextures[i] = GlUtil.generateTexture(GLES20.GL_TEXTURE_2D);
         }
-      }
+      }         /**** import. ****/
       yuvUploader.uploadYuvData(
           yuvTextures, frame.width, frame.height, frame.yuvStrides, frame.yuvPlanes);
       drawer.drawYuv(yuvTextures, texMatrix, 0, 0, surfaceSize.x, surfaceSize.y);
@@ -494,6 +494,8 @@ public class SurfaceViewRenderer extends SurfaceView
       drawer.drawOes(frame.textureId, texMatrix, 0, 0, surfaceSize.x, surfaceSize.y);
     }
 
+
+    /*****import. *****/
     eglBase.swapBuffers();
     VideoRenderer.renderFrameDone(frame);
     synchronized (statisticsLock) {

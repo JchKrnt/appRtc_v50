@@ -56,6 +56,7 @@ import java.util.regex.Pattern;
  * This class is a singleton.
  */
 public class PeerConnectionClient {
+    private static final String ICE_TAG = "ice_tag";
     public static final String VIDEO_TRACK_ID = "ARDAMSv0";
     public static final String AUDIO_TRACK_ID = "ARDAMSa0";
     private static final String TAG = "PCRTCClient";
@@ -166,6 +167,25 @@ public class PeerConnectionClient {
             this.noAudioProcessing = noAudioProcessing;
             this.aecDump = aecDump;
             this.useOpenSLES = useOpenSLES;
+        }
+
+        @Override
+        public String toString() {
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("videoCallEnable: ").append(videoCallEnabled).append("\\n");
+            sb.append("loopback: ").append(loopback).append("\\n");
+            sb.append("tracing: ").append(tracing).append("\\n");
+            sb.append("videoWidth: ").append(videoWidth).append("\\n");
+            sb.append("videoCallEnable: ").append(videoCallEnabled).append("\\n");
+            sb.append("videoCodec: ").append(videoCodec).append("\\n");
+            sb.append("videoCodecHwAcceleration: ").append(videoCodecHwAcceleration).append("\\n");
+            sb.append("audioCodec: ").append(audioCodec).append("\\n");
+            sb.append("noAudioProcessing: ").append(noAudioProcessing).append("\\n");
+            sb.append("aecDump: ").append(aecDump).append("\\n");
+            sb.append("useOpenSLES: ").append(useOpenSLES).append("\\n");
+
+            return sb.toString();
         }
     }
 
@@ -292,6 +312,8 @@ public class PeerConnectionClient {
     }
 
     private void createPeerConnectionFactoryInternal(Context context) {
+
+        Log.d(ICE_TAG, "--createPeerConnectionFactoryInternal parameter --" + peerConnectionParameters.toString());
         PeerConnectionFactory.initializeInternalTracer();
         if (peerConnectionParameters.tracing) {
             PeerConnectionFactory.startInternalTracingCapture(
@@ -347,6 +369,8 @@ public class PeerConnectionClient {
     private void createMediaConstraintsInternal() {
         // Create peer connection constraints.
         pcConstraints = new MediaConstraints();
+
+        Log.d(ICE_TAG,"--createMediaConstraintsInternal");
         // Enable DTLS for normal calls and disable for loopback calls.
         if (peerConnectionParameters.loopback) {
             pcConstraints.optional.add(
@@ -619,7 +643,7 @@ public class PeerConnectionClient {
             @Override
             public void run() {
                 if (peerConnection != null && !isError) {
-                    Log.d(TAG, "PC Create OFFER");
+                    Log.d(ICE_TAG, "PC Create OFFER");
                     isInitiator = true;
                     peerConnection.createOffer(sdpObserver, sdpMediaConstraints);
                 }
@@ -632,7 +656,7 @@ public class PeerConnectionClient {
             @Override
             public void run() {
                 if (peerConnection != null && !isError) {
-                    Log.d(TAG, "PC create ANSWER");
+                    Log.d(ICE_TAG, "PC create ANSWER");
                     isInitiator = false;
                     peerConnection.createAnswer(sdpObserver, sdpMediaConstraints);
                 }
@@ -648,6 +672,7 @@ public class PeerConnectionClient {
                     if (queuedRemoteCandidates != null) {
                         queuedRemoteCandidates.add(candidate);
                     } else {
+                        Log.d(ICE_TAG, "add remote ice : " + candidate.sdp);
                         peerConnection.addIceCandidate(candidate);
                     }
                 }
@@ -682,6 +707,8 @@ public class PeerConnectionClient {
                             sdpDescription, peerConnectionParameters.audioStartBitrate);
                 }
                 Log.d(TAG, "Set remote SDP.");
+                Log.d(ICE_TAG, "setRemoteDescription : " + sdpDescription);
+
                 SessionDescription sdpRemote = new SessionDescription(
                         sdp.type, sdpDescription);
                 peerConnection.setRemoteDescription(sdpObserver, sdpRemote);
@@ -733,7 +760,13 @@ public class PeerConnectionClient {
 
         localVideoTrack = factory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
         localVideoTrack.setEnabled(renderVideo);
+
+//        localVideoTrack.addRenderer(new VideoRenderer(new GpuImagerRenderer()));
         localVideoTrack.addRenderer(new VideoRenderer(localRender));
+
+
+
+
         return localVideoTrack;
     }
 
@@ -868,6 +901,7 @@ public class PeerConnectionClient {
         if (queuedRemoteCandidates != null) {
             Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
             for (IceCandidate candidate : queuedRemoteCandidates) {
+                Log.d(ICE_TAG,"add iceCandidate :" + candidate.sdp);
                 peerConnection.addIceCandidate(candidate);
             }
             queuedRemoteCandidates = null;
@@ -918,6 +952,8 @@ public class PeerConnectionClient {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d(PeerConnectionClient.class.getName(), "local ice : " + candidate.sdp);
+                    Log.d(ICE_TAG, "local ice : " + candidate.sdp);
                     events.onIceCandidate(candidate);
                 }
             });
@@ -926,7 +962,7 @@ public class PeerConnectionClient {
         @Override
         public void onSignalingChange(
                 PeerConnection.SignalingState newState) {
-            Log.d(TAG, "SignalingState: " + newState);
+            Log.d(ICE_TAG, "SignalingState: " + newState);
         }
 
         @Override
@@ -935,7 +971,7 @@ public class PeerConnectionClient {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "IceConnectionState: " + newState);
+                    Log.d(ICE_TAG, "IceConnectionState: " + newState);
                     if (newState == IceConnectionState.CONNECTED) {
                         events.onIceConnected();
                     } else if (newState == IceConnectionState.DISCONNECTED) {
@@ -950,12 +986,12 @@ public class PeerConnectionClient {
         @Override
         public void onIceGatheringChange(
                 PeerConnection.IceGatheringState newState) {
-            Log.d(TAG, "IceGatheringState: " + newState);
+            Log.d(ICE_TAG, "IceGatheringState: " + newState);
         }
 
         @Override
         public void onIceConnectionReceivingChange(boolean receiving) {
-            Log.d(TAG, "IceConnectionReceiving changed to " + receiving);
+            Log.d(ICE_TAG, "IceConnectionReceiving changed to " + receiving);
         }
 
         @Override
@@ -1026,6 +1062,7 @@ public class PeerConnectionClient {
                 public void run() {
                     if (peerConnection != null && !isError) {
                         Log.d(TAG, "Set local SDP from " + sdp.type);
+                        Log.d(ICE_TAG, "Set local SDP : " + sdp.description);
                         peerConnection.setLocalDescription(sdpObserver, sdp);
                     }
                 }

@@ -22,9 +22,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -37,6 +39,8 @@ import org.webrtc.SessionDescription;
 import org.webrtc.StatsReport;
 import org.webrtc.RendererCommon.ScalingType;
 import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.VideoRenderer;
+import org.webrtc.VideoRendererGui;
 
 /**
  * Activity for peer connection call setup, call waiting
@@ -118,7 +122,8 @@ public class CallActivity extends Activity
   private AppRTCAudioManager audioManager = null;
   private EglBase rootEglBase;
   private SurfaceViewRenderer localRender;
-  private SurfaceViewRenderer remoteRender;
+  private VideoRenderer.Callbacks remoteRender;
+  private GLSurfaceView remoteSurface;
   private PercentFrameLayout localRenderLayout;
   private PercentFrameLayout remoteRenderLayout;
   private ScalingType scalingType;
@@ -164,7 +169,8 @@ public class CallActivity extends Activity
 
     // Create UI controls.
     localRender = (SurfaceViewRenderer) findViewById(R.id.local_video_view);
-    remoteRender = (SurfaceViewRenderer) findViewById(R.id.remote_video_view);
+//    remoteRender = (SurfaceViewRenderer) findViewById(R.id.remote_video_view);
+    remoteSurface = (GLSurfaceView) findViewById(R.id.remote_video_view);
     localRenderLayout = (PercentFrameLayout) findViewById(R.id.local_video_layout);
     remoteRenderLayout = (PercentFrameLayout) findViewById(R.id.remote_video_layout);
     callFragment = new CallFragment();
@@ -179,12 +185,23 @@ public class CallActivity extends Activity
     };
 
     localRender.setOnClickListener(listener);
-    remoteRender.setOnClickListener(listener);
+
+    //modify by jch.
+    remoteSurface.setOnClickListener(listener);
+//    remoteRender.setOnClickListener(listener);
+    VideoRendererGui.setView(remoteSurface, new Runnable() {
+      @Override
+      public void run() {
+
+      }
+    });
+    remoteRender = VideoRendererGui.create(0,0, 100, 100, ScalingType.SCALE_ASPECT_FILL, true);
 
     // Create video renderers.
     rootEglBase = EglBase.create();
+
     localRender.init(rootEglBase.getEglBaseContext(), null);
-    remoteRender.init(rootEglBase.getEglBaseContext(), null);
+//    remoteRender.init(rootEglBase.getEglBaseContext(), null);
     localRender.setZOrderMediaOverlay(true);
     updateVideoView();
 
@@ -349,8 +366,9 @@ public class CallActivity extends Activity
 
   private void updateVideoView() {
     remoteRenderLayout.setPosition(REMOTE_X, REMOTE_Y, REMOTE_WIDTH, REMOTE_HEIGHT);
-    remoteRender.setScalingType(scalingType);
-    remoteRender.setMirror(false);
+    //modify by jch.
+//    remoteRender.setScalingType(scalingType);
+//    remoteRender.setMirror(false);
 
     if (iceConnected) {
       localRenderLayout.setPosition(
@@ -364,7 +382,10 @@ public class CallActivity extends Activity
     localRender.setMirror(true);
 
     localRender.requestLayout();
-    remoteRender.requestLayout();
+
+    //modify by jch.
+    remoteSurface.requestLayout();
+//    remoteRender.requestLayout();
   }
 
   private void startCall() {
@@ -431,7 +452,7 @@ public class CallActivity extends Activity
       localRender = null;
     }
     if (remoteRender != null) {
-      remoteRender.release();
+//      remoteRender.release();
       remoteRender = null;
     }
     if (audioManager != null) {
